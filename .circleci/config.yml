@@ -27,6 +27,13 @@ commands:
               npm install
               npm run migration:revert
             fi
+  configure-aws:
+    description: Config access key for AWS
+    steps:
+      - aws-cli/setup:
+          aws-access-key-id: AWS_ACCESS_KEY
+          aws-secret-access-key: AWS_ACCESS_SECRET
+          aws-region: AWS_REGION_NAME
 jobs:
   build-frontend:
     docker:
@@ -157,20 +164,14 @@ jobs:
       - slack/notify:
           event: fail
           template: basic_fail_1
-  setup-aws:
-    executor: aws-cli/default
-    steps:
-      - aws-cli/setup:
-          aws-access-key-id: AWS_ACCESS_KEY
-          aws-secret-access-key: AWS_ACCESS_SECRET
-          aws-region: AWS_REGION_NAME
   deploy-infrastructure:
     executor: aws-cli/default
     steps:
       - checkout
+      - configure-aws
       - run:
           name: Ensure front-end infrastructure exist
-          command: >-
+          command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
               --tags project=your-udacity \
@@ -179,7 +180,7 @@ jobs:
             exit 1
       - run:
           name: Ensure back-end infrastructure exists
-          command: >-
+          command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
               --tags project=udacity \
@@ -346,7 +347,6 @@ workflows:
           requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
-      - setup-aws
       - deploy-infrastructure:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
