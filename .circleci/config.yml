@@ -195,7 +195,7 @@ jobs:
       - slack/notify:
           event: fail
           template: basic_fail_1
-      - destroy-environment:
+      - destroy-environment
   # configure-infrastructure:
   #   docker:
   #     # Docker image here that supports Ansible
