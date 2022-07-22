@@ -170,7 +170,7 @@ jobs:
       - checkout
       - run:
           name: Ensure front-end infrastructure exist
-          command: |
+          command: >-
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
               --tags project=your-udacity \
@@ -179,7 +179,7 @@ jobs:
             exit 1
       - run:
           name: Ensure back-end infrastructure exists
-          command: |
+          command: >-
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
               --tags project=udacity \
@@ -346,8 +346,7 @@ workflows:
           requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
-      - setup-aws:
-          context: aws
+      - setup-aws
       - deploy-infrastructure:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
