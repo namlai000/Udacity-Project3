@@ -123,6 +123,7 @@ jobs:
           name: Check for frontend vulnerabilities
           command: |
             cd frontend
+            npm install
             npm audit
       - save_cache:
           paths: [frontend/node_modules]
@@ -144,6 +145,7 @@ jobs:
           name: Check for backend vulnerabilities
           command: |
             cd frontend
+            npm install
             npm audit
       - save_cache:
           paths: [backend/node_modules]
