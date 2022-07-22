@@ -1,6 +1,7 @@
 version: 2.1
 orbs: 
   slack: circleci/slack@4.10.1
+  aws-cli: circleci/aws-cli@3.1.1
 commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
@@ -156,9 +157,13 @@ jobs:
       - slack/notify:
           event: fail
           template: basic_fail_1
+  setup-aws:
+    executor: aws-cli/default
+    steps:
+      - aws-cli/setup:
+          profile-name: default
   deploy-infrastructure:
-    docker:
-      - image: amazon/aws-cli
+    executor: aws-cli/default
     steps:
       - checkout
       - run:
@@ -168,7 +173,7 @@ jobs:
               --template-file .circleci/files/frontend.yml \
               --tags project=your-udacity \
               --stack-name udacity-frontend-${CIRCLE_WORKFLOW_ID:0:7} \
-              --parameter-overrides ID="your workflow id"
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
             exit 1
       - run:
           name: Ensure back-end infrastructure exists
@@ -339,6 +344,7 @@ workflows:
           requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
+      - setup-aws
       - deploy-infrastructure:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
