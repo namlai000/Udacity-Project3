@@ -321,7 +321,6 @@ jobs:
             else
               exit 1
             fi
-            exit 1
       - run:
           name: Frontend smoke test.
           command: |
