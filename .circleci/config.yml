@@ -174,6 +174,10 @@ jobs:
               --output text)
             echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
+      - run: 
+          name: Add dependencies
+          command: |
+            yum -y install tar gzip jq
       - persist_to_workspace:
           root: ~/
           paths:
@@ -227,7 +231,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt update
-            sudo apt install -y tar gzip curl software-properties-common
+            sudo apt install -y tar gzip curl
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
             unzip awscli-exe-linux-x86_64.zip
             sudo ./aws/install
