@@ -234,11 +234,11 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apt-get update
-            apt-get install -y tar gzip curl
+            sudo apt-get update
+            sudo apt install -y tar gzip curl
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
             unzip awscli-exe-linux-x86_64.zip
-            ./aws/install
+            sudo ./aws/install
       - run:
           name: Get backend url
           command: |
