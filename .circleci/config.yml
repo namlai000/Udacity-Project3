@@ -384,9 +384,9 @@ jobs:
             OLDID=$(curl --insecure https://kvdb.io/${KEYVAULT}/oldid)
             if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OLDID}" ]]
             then
-              aws s3 rm "s3://udacity-${OLDID}"
               aws cloudformation delete-stack --stack-name "udacity-backend-${OLDID}"
               aws cloudformation delete-stack --stack-name "udacity-frontend-${OLDID}"
+              aws s3 rm "s3://udacity-${OLDID}"
             fi
       - slack/notify:
           event: pass
