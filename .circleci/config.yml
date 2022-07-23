@@ -1,13 +1,10 @@
 version: 2.1
 orbs:
   slack: circleci/slack@4.10.1
-  aws-cli: circleci/aws-cli@3.1.1
 commands:
   destroy-environment:
-    executor: aws-cli/default
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     steps:
-      - configure-aws
       - run:
           name: Destroy environments
           when: on_fail
@@ -17,13 +14,6 @@ commands:
             if aws s3 ls | grep udacity-${CIRCLE_WORKFLOW_ID:0:7}; then
               aws s3 rm s3://udacity-${CIRCLE_WORKFLOW_ID:0:7}
             fi
-  configure-aws:
-    description: Config access key for AWS
-    steps:
-      - aws-cli/setup:
-          aws-access-key-id: AWS_ACCESS_KEY
-          aws-secret-access-key: AWS_ACCESS_SECRET
-          aws-region: AWS_REGION_NAME
 jobs:
   build-frontend:
     docker:
@@ -155,10 +145,10 @@ jobs:
           event: fail
           template: basic_fail_1
   deploy-infrastructure:
-    executor: aws-cli/default
+    docker:
+      - image: amazon/aws-cli
     steps:
       - checkout
-      - configure-aws
       - run:
           name: Ensure back-end infrastructure exists
           command: |
@@ -236,8 +226,8 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            sudo apt-get update
-            sudo apt install -y tar gzip curl
+            sudo apt update
+            sudo apt install -y tar gzip curl software-properties-common
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
             unzip awscli-exe-linux-x86_64.zip
             sudo ./aws/install
