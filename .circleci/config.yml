@@ -250,7 +250,7 @@ jobs:
             cd frontend
             npm install
             npm run build
-            tar -czvf artifact-${CIRCLE_WORKFLOW_ID:0:7}.tar.gz dist
+            tar -czvf artifact.tar.gz dist
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - slack/notify:
           event: pass
@@ -282,9 +282,9 @@ jobs:
             npm install typescript@latest -g
             npm install
             npm run build
-            tar -czf artifact-${CIRCLE_WORKFLOW_ID:0:7}.tar.gz dist/* package*
+            tar -czf artifact.tar.gz dist/* package*
             cd ..
-            cp backend/artifact-${CIRCLE_WORKFLOW_ID:0:7}.tar.gz .circleci/ansible/roles/deploy/files
+            cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files
       - run:
           name: Deploy backend
           command: |
