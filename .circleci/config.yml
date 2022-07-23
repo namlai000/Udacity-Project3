@@ -376,7 +376,7 @@ jobs:
           event: fail
           template: basic_fail_1
       - destroy-environment
-cleanup:
+  cleanup:
     docker:
       - image: python:latest
     steps:
