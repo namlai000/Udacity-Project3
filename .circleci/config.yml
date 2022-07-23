@@ -231,9 +231,9 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt update
-            sudo apt install -y tar gzip curl
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
-            unzip awscli-exe-linux-x86_64.zip
+            sudo apt install -y tar gzip curl software-properties-common
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "aws.zip"
+            unzip aws.zip
             sudo ./aws/install
       - run:
           name: Get backend url
