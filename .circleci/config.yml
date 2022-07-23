@@ -342,7 +342,7 @@ jobs:
       - destroy-environment
   cloudfront-update:
     docker:
-      - image: python:3.11-rc-alpine3.16
+      - image: amazon/aws-cli
     steps:
       - checkout
       - run:
@@ -350,13 +350,6 @@ jobs:
           command: |
             apk add --update curl
             pip install awscli
-      - run:
-          name: Save Old Workflow ID to kvdb.io
-          command: |
-            OLDID=$(aws cloudformation \
-                      list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-                      --no-paginate --output text)
-            curl https://kvdb.io/${KEYVAULT}/oldid -d "${OLDID}"
       - run:
           name: Update cloudfront distribution
           command: |
@@ -385,7 +378,9 @@ jobs:
       - run:
           name: Remove old files
           command: |
-            OLDID=$(curl --insecure https://kvdb.io/${KEYVAULT}/oldid)
+            OLDID=$(aws cloudformation \
+                      list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+                      --no-paginate --output text)
             if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OLDID}" ]]
             then
               aws cloudformation delete-stack --stack-name "udacity-backend-${OLDID}"
