@@ -273,7 +273,9 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update curl nodejs npm ansible zip openssh-client tar gzip
+            apk add --update curl nodejs npm
+            apk add --update ansible zip
+            apk add --update openssh-client tar gzip
             pip install awscli
       - run:
           name: Package backend
@@ -288,6 +290,10 @@ jobs:
       - run:
           name: Deploy backend
           command: |
+            export TYPEORM_MIGRATIONS_DIR=./migrations
+            export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
+            export TYPEORM_MIGRATIONS=./migrations/*.ts
+            export ANSIBLE_HOST_KEY_CHECKING=False
             cd .circleci/ansible
             ansible-playbook -i inventory.txt deploy-backend.yml
       - slack/notify:
