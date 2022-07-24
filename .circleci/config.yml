@@ -14,6 +14,21 @@ commands:
             if aws s3 ls | grep udapeople-${CIRCLE_WORKFLOW_ID:0:7}; then
               aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
             fi
+  revert-migrations:
+    description: Revert the last migration
+    steps:
+      - run:
+          name: Revert migrations
+          when: on_fail
+          command: |
+            SUCCESS=$(curl --insecure https://kvdb.io/${KEYVAULT}/migration_${CIRCLE_WORKFLOW_ID:0:7})
+            # Logic for reverting the database state
+            if (( $SUCCESS == 1 ));
+            then
+                cd ~/project/backend
+                npm install
+                npm run migration:revert
+            fi
 jobs:
   build-frontend:
     docker:
@@ -220,6 +235,37 @@ jobs:
           event: fail
           template: basic_fail_1
       - destroy-environment
+  run-migrations:
+    docker:
+      - image: sleavely/node-awscli:14.x
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - add_ssh_keys:
+          fingerprints: ["73:2a:c1:d7:4b:10:1e:2f:cf:27:e0:34:22:60:0a:1e"]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Run migrations
+          command: |
+            cd backend
+            npm install
+            npm run migrations > migrations_dump.txt
+      - run:
+          name: Send migration results to memstash
+          command: |   
+            if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
+            then
+                curl https://kvdb.io/${KEYVAULT}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+            fi
+      - slack/notify:
+          event: pass
+          template: basic_success_1
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+      - destroy-environments
   deploy-frontend:
     docker:
       - image: cimg/node:13.8.0
@@ -341,6 +387,7 @@ jobs:
           event: fail
           template: basic_fail_1
       - destroy-environment
+      - revert-migrations
   cloudfront-update:
     docker:
       - image: amazon/aws-cli
@@ -366,6 +413,7 @@ jobs:
           event: fail
           template: basic_fail_1
       - destroy-environment
+      - revert-migrations
   cleanup:
     docker:
       - image: python:3.11-rc-alpine3.16
@@ -414,10 +462,12 @@ workflows:
               only: [master]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
       - deploy-frontend:
-          requires: [configure-infrastructure]
+          requires: [run-migrations]
       - deploy-backend:
-          requires: [configure-infrastructure]
+          requires: [run-migrations]
       - smoke-test:
           requires: [deploy-backend, deploy-frontend]
       - cloudfront-update:
