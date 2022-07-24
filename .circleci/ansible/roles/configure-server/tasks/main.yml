@@ -1,26 +1,19 @@
 ---
 
-- name: "Add nodejs from deb.nodesource.com."
-  become: yes
-  shell: |
-    curl -sL https://deb.nodesource.com/setup_13.x | sudo -E bash -
-
-- name: "Install nodejs 13.x."
-  become: yes
+- name: "upgrade packages."
+  become: true
   apt:
-    name: ["nodejs"]
+    upgrade: "yes"
+
+- name: "install dependencies."
+  become: true
+  apt:
+    name: ["nodejs", "npm"]
     state: latest
     update_cache: yes
 
-- name: "Install zip utility."
-  become: yes
-  apt:
-    name: [ "zip", "unzip" ]
-    state: latest
-    update_cache: yes
-
-- name: "Install pm2."
-  become: yes
+- name: "install pm2"
+  become: true
   npm:
     name: pm2
     global: yes
