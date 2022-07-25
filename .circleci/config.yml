@@ -123,7 +123,7 @@ jobs:
           command: |
             cd frontend
             npm install
-            npm audit --audit-level=critical fix --force
+            npm audit --audit-level=critical
       - slack/notify:
           event: fail
           template: basic_fail_1
@@ -140,7 +140,7 @@ jobs:
           command: |
             cd backend
             npm install
-            npm audit --audit-level=critical fix --force
+            npm audit --audit-level=critical
       - slack/notify:
           event: fail
           template: basic_fail_1
