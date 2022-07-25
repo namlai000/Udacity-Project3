@@ -29,7 +29,7 @@ commands:
           name: Revert migrations
           when: on_fail
           command: |
-            SUCCESS=$(curl --insecure https://kvdb.io/${KEYVAULT}/migration_<<parameters.workflow_id>>)
+            SUCCESS=$(curl --insecure https://kvdb.io/2vCJuiEYYreXcKbCJdZH3u/migration_<<parameters.workflow_id>>)
             # Logic for reverting the database state
             if (( $SUCCESS == 1 ));
             then
@@ -280,7 +280,7 @@ jobs:
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
-            curl https://kvdb.io/${KEYVAULT}/apiurl -d ${API_URL}
+            curl https://kvdb.io/2vCJuiEYYreXcKbCJdZH3u/apiurl -d ${API_URL}
             cat frontend/.env
       - run:
           name: Deploy frontend objects
@@ -341,7 +341,7 @@ jobs:
       - run:
           name: Backend smoke test.
           command: |
-            API_URL=$(curl --insecure https://kvdb.io/${KEYVAULT}/apiurl)
+            API_URL=$(curl --insecure https://kvdb.io/2vCJuiEYYreXcKbCJdZH3u/apiurl)
             echo "${API_URL}"
             if curl "${API_URL}/api/status" | grep "ok"
             then
