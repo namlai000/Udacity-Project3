@@ -1,5 +1,4 @@
 ---
-
 - name: "upgrade packages"
   become: true
   apt:
@@ -36,6 +35,6 @@
     chdir: /home/ubuntu/backend
   
 - name: Use pm2 to run backend
-  command: pm2 start dist/main.js --name "backend" -i max -f
+  command: pm2 start dist/main.js --name "backend" -i max
   args:
     chdir: /home/ubuntu/backend
