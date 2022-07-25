@@ -280,7 +280,7 @@ jobs:
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
-            curl -d '${API_URL}' https://kvdb.io/2vCJuiEYYreXcKbCJdZH3u/apiurl 
+            curl https://kvdb.io/2vCJuiEYYreXcKbCJdZH3u/apiurl -d ${API_URL}
             cat frontend/.env
       - run:
           name: Deploy frontend objects
