@@ -12,6 +12,7 @@ var outPath = path.join(__dirname, './dist');
 // plugins
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var MiniCssExtractPlugin = require('mini-css-extract-plugin');
+var WebpackCleanupPlugin = require('webpack-cleanup-plugin');
 
 module.exports = {
   context: sourcePath,
@@ -20,7 +21,7 @@ module.exports = {
   },
   output: {
     path: outPath,
-    filename: '[name].js',
+    filename: 'bundle.js',
     chunkFilename: '[chunkhash].js',
     publicPath: process.env.FRONTEND_URL || '/',
   },
@@ -35,7 +36,6 @@ module.exports = {
       assets: path.resolve(__dirname, 'src/assets/'),
     },
   },
-  stats: 'minimal',
   module: {
     rules: [
       // .ts, .tsx
@@ -100,7 +100,7 @@ module.exports = {
           isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
           {
             loader: 'css-loader',
-            options: {
+            query: {
               modules: false,
               sourceMap: !isProduction,
               importLoaders: 1,
@@ -134,6 +134,7 @@ module.exports = {
   },
   optimization: {
     splitChunks: {
+      name: true,
       cacheGroups: {
         commons: {
           chunks: 'initial',
@@ -153,14 +154,14 @@ module.exports = {
     new webpack.EnvironmentPlugin({
       NODE_ENV: 'development', // use 'development' unless process.env.NODE_ENV is defined
       DEBUG: false,
-      API_URL: process.env.API_URL || 'http://localhost:3000',
+      API_URL: process.env.API_URL,
       WP_HELP_EMAIL: 'info@acklenavenue.com',
     }),
-    isProduction
-      ? new MiniCssExtractPlugin({
-          filename: '[contenthash].css',
-        })
-      : false,
+    new WebpackCleanupPlugin(),
+    new MiniCssExtractPlugin({
+      filename: '[contenthash].css',
+      disable: !isProduction,
+    }),
     new HtmlWebpackPlugin({
       inject: true,
       hash: true,
@@ -170,19 +171,23 @@ module.exports = {
       API_URL: process.env.API_URL,
       WP_HELP_EMAIL: process.env.WP_HELP_EMAIL,
     }),
-  ].filter(Boolean),
+  ],
   devServer: {
-    static: sourcePath,
+    contentBase: sourcePath,
     hot: true,
-    // inline: true,
+    inline: true,
     historyApiFallback: {
       disableDotRule: true,
     },
-    // clientLogLevel: 'warning',
-    client: {
-      logging: 'warn',
-    },
+    stats: 'minimal',
+    clientLogLevel: 'warning',
   },
   // https://webpack.js.org/configuration/devtool/
   devtool: isProduction ? 'hidden-source-map' : 'inline-source-map',
+  node: {
+    // workaround for webpack-dev-server issue
+    // https://github.com/webpack/webpack-dev-server/issues/60#issuecomment-103411179
+    fs: 'empty',
+    net: 'empty',
+  },
 };
