@@ -344,34 +344,41 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk --no-cache add curl
+            apk add --update curl
             pip install awscli
-      # - run:
-      #     name: Backend smoke test.
-      #     command: |
-      #       API_URL=$(curl --insecure https://kvdb.io/${KEYVAULT}/apiurl)
-      #       echo "${API_URL}"
-      #       if curl "${API_URL}/api/status" | grep "ok"
-      #       then
-      #         return 0
-      #       else
-      #         return 1
-      #       fi
+      - run:
+          name: Backend smoke test.
+          command: |
+            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --output text)
+            export API_URL=http://${BACKEND_PUBLIC_IP}:3030
+            echo ${API_URL}
+            if curl -s $API_URL/api/status | grep "ok"
+            then
+              exit 0
+            else
+              exit 1
+            fi
       - run:
           name: Frontend smoke test.
           command: |
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#/employees"            
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website.${AWS_DEFAULT_REGION}.amazonaws.com"             
             echo ${URL} 
             if curl -s ${URL} | grep "Welcome"
             then
-              return 0
+              exit 0
             else
-              return 1
+              exit 1
             fi
-      - destroy-environments:
-          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations:
-          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   cloudfront-update:
     docker:
