@@ -15,25 +15,25 @@ commands:
             aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.workflow_id >>
             aws s3 rm s3://udapeople-<<parameters.workflow_id>> --recursive
             
-  # revert-migrations:
-  #   description: Revert the last migration
-  #   parameters:
-  #     workflow_id:
-  #       type: string
-  #   steps:
-  #     - run:
-  #         name: Revert migrations
-  #         when: on_fail
-  #         command: |
-  #           SUCCESS=$(curl --insecure  https://kvdb.io/${KEYVAULT}/migration_<< parameters.workflow_id >>)
-  #           echo $SUCCESS
-  #           # Logic for reverting the database state
-  #           if (( $SUCCESS == 1 ));
-  #           then
-  #               cd ~/project/backend
-  #               npm install
-  #               npm run migrations:revert
-  #           fi
+  revert-migrations:
+    description: Revert the last migration
+    parameters:
+      workflow_id:
+        type: string
+    steps:
+      - run:
+          name: Revert migrations
+          when: on_fail
+          command: |
+            SUCCESS=$(curl --insecure  https://kvdb.io/${KEYVAULT}/migration_<< parameters.workflow_id >>)
+            echo $SUCCESS
+            # Logic for reverting the database state
+            if (( $SUCCESS == 1 ));
+            then
+                cd ~/project/backend
+                npm install
+                npm run migrations:revert
+            fi
 
   awscli:
     description: Install AWS CLI v2
@@ -238,30 +238,30 @@ jobs:
           paths:
             - project/backend/.env
 
-  # run-migrations:
-  #   docker:
-  #     - image: cimg/node:13.8.0
-  #   steps:
-  #     - checkout
-  #     - awscli
-  #     - restore_cache:
-  #         keys: [backend-build]
-  #     - run:
-  #         name: Run migrations
-  #         command: |
-  #           cd backend
-  #           npm install
-  #           npm run migrations > migrations_dump.txt
-  #           echo "has been executed successfully." >> migrations_dump.txt
-  #           cat migrations_dump.txt
+  run-migrations:
+    docker:
+      - image: cimg/node:13.8.0
+    steps:
+      - checkout
+      - awscli
+      - restore_cache:
+          keys: [backend-build]
+      - run:
+          name: Run migrations
+          command: |
+            cd backend
+            npm install
+            npm run migrations > migrations_dump.txt
+            echo "has been executed successfully." >> migrations_dump.txt
+            cat migrations_dump.txt
 
-  #     - run:
-  #         name: Send migration status to kvdb.io
-  #         command: |
-  #           if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
-  #           then  
-  #                curl https://kvdb.io/${KEYVAULT}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'    
-  #           fi
+      - run:
+          name: Send migration status to kvdb.io
+          command: |
+            if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
+            then  
+                 curl https://kvdb.io/${KEYVAULT}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'    
+            fi
 
   deploy-frontend:
     docker:
@@ -400,8 +400,8 @@ jobs:
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
-      # - revert-migrations:
-      #     workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   cloudfront-update:
     docker:
@@ -433,8 +433,8 @@ jobs:
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
-      # - revert-migrations:
-      #     workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   cleanup:
     docker:
@@ -486,12 +486,12 @@ workflows:
               only: [master]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
-      # - run-migrations:
-      #     requires: [configure-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
       - deploy-frontend:
-          requires: [configure-infrastructure]
+          requires: [run-migrations]
       - deploy-backend:
-          requires: [configure-infrastructure]
+          requires: [run-migrations]
       - smoke-test:
           requires: [deploy-backend, deploy-frontend]
       - cloudfront-update:
