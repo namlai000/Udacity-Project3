@@ -15,7 +15,9 @@ commands:
           command: |
             aws cloudformation delete-stack --stack-name udapeople-backend-<<parameters.workflow_id>>
             aws cloudformation delete-stack --stack-name udapeople-frontend-<<parameters.workflow_id>>
-            aws s3 rm s3://udapeople-<<parameters.workflow_id>> --recursive
+            if aws s3 ls | grep udapeople-<<parameters.workflow_id>>; then
+              aws s3 rm s3://udapeople-<<parameters.workflow_id>> --recursive
+            fi
 
   revert-migrations:
     description: Revert the last migration
@@ -423,9 +425,11 @@ jobs:
                 echo "--------------- CLEAN OLD INFRASTRUCTURE ---------------"
                 unset OldWorkflowID
                 OldWorkflowID=$(echo $stackitem | sed -r 's/udapeople-.*-//g')
-                aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
                 aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
                 aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
+                if aws s3 ls | grep udapeople-${OldWorkflowID}; then
+                  aws s3 rm s3://udapeople-${OldWorkflowID} --recursive
+                fi
               else
                 echo "--------------- CANNOT CLEAN ---------------"
               fi
