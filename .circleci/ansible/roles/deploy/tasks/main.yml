@@ -22,8 +22,6 @@
     pm2 start main.js
   register: execute_node
   environment:
-    NODE_PORT: "3030"
-    PORT: "3030"
     NODE_ENV: "production"
     VERSION: "{{ lookup('env','VERSION') }}"
     ENVIRONMENT: "{{ lookup('env','ENVIRONMENT') }}" 

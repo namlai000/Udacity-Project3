@@ -214,8 +214,6 @@ jobs:
       - run:
           name: Set env
           command: |
-            echo NODE_PORT=3030 >> backend/.env
-            echo PORT=3030 >> backend/.env
             echo NODE_ENV=production >> backend/.env
             echo VERSION=1 >> backend/.env
             echo TYPEORM_CONNECTION=postgres >> backend/.env
@@ -227,6 +225,7 @@ jobs:
             echo TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js} >> backend/.env
             echo TYPEORM_MIGRATIONS_DIR=./migrations >> backend/.env
             echo TYPEORM_MIGRATIONS=./migrations/*.ts >> backend/.env
+            cat backend/.env
       - run:
           name: Install dependencies
           command: |

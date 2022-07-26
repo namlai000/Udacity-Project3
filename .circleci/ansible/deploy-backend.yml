@@ -9,8 +9,6 @@
     - ansible_host_key_checking: false
     - ansible_stdout_callback: yaml
   environment:
-    NODE_PORT: "3030"
-    PORT: "3030"
     NODE_ENV: "production"
     VERSION: "{{ lookup('env','VERSION') }}"
     ENVIRONMENT: "{{ lookup('env','ENVIRONMENT') }}" 
