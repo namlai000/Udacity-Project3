@@ -194,6 +194,7 @@ jobs:
     docker:
       - image: python:3.7-alpine3.11
         environment:
+          PORT: 3030
           NODE_ENV: production
           VERSION: 1
           TYPEORM_CONNECTION: postgres
@@ -212,6 +213,7 @@ jobs:
       - run:
           name: Set env
           command: |
+            echo PORT=3030 >> backend/.env
             echo NODE_ENV=production >> backend/.env
             echo VERSION=1 >> backend/.env
             echo TYPEORM_CONNECTION=postgres >> backend/.env
