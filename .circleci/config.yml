@@ -208,6 +208,18 @@ jobs:
       - attach_workspace:
           at: ~/
       - run:
+          name: Set env
+          command: |
+            echo NODE_ENV=production >> backend/.env
+            echo VERSION=1 >> backend/.env
+            echo TYPEORM_CONNECTION=postgres >> backend/.env
+            echo TYPEORM_HOST=database-1.cgarwfdtnt93.us-east-1.rds.amazonaws.com >> backend/.env
+            echo TYPEORM_USERNAME=postgres >> backend/.env
+            echo TYPEORM_PASSWORD=password >> backend/.env
+            echo TYPEORM_DATABASE=glee >> backend/.env
+            echo TYPEORM_PORT=5432 >> backend/.env
+            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> backend/.env
+      - run:
           name: Install dependencies
           command: |
             apk add --update ansible
@@ -217,6 +229,10 @@ jobs:
           command: |
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/backend/.env
       - slack/notify:
           event: fail
           template: basic_fail_1
