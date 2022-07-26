@@ -25,8 +25,8 @@
     ENVIRONMENT: production
     TYPEORM_CONNECTION: "postgres"
     TYPEORM_ENTITIES: "./src/modules/domain/**/*.entity.ts"
-    TYPEORM_HOST: "localhost"
-    TYPEORM_PORT: 5532
+    TYPEORM_HOST: "database-1.cgarwfdtnt93.us-east-1.rds.amazonaws.com"
+    TYPEORM_PORT: 5432
     TYPEORM_USERNAME: "postgres"
     TYPEORM_PASSWORD: "password"
     TYPEORM_DATABASE: "glee"
