@@ -14,6 +14,7 @@
   shell: |
     cd ~/backend-app
     npm i
+    
 - name: "Run node app with pm2"
   shell: |
     cd ~/backend-app/dist

@@ -375,7 +375,7 @@ jobs:
       - slack/notify:
           event: fail
           template: basic_fail_1
-      - destroy-environment:
+      - destroy-environments:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
