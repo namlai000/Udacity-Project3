@@ -19,9 +19,7 @@
   shell: |
     cd ~/backend-app/dist
     pm2 stop default
-    pm2 link 9aov2bz5u4vd37z fgvsnnx1w11hhkx
     pm2 start main.js
-    pm2 plus
   register: execute_node
   environment:
     NODE_ENV: "production"
@@ -36,6 +34,12 @@
     TYPEORM_ENTITIES: "{{ lookup('env','TYPEORM_ENTITIES') }}"
     TYPEORM_MIGRATIONS_DIR: "{{ lookup('env','TYPEORM_MIGRATIONS_DIR') }}"
     TYPEORM_MIGRATIONS: "{{ lookup('env','TYPEORM_MIGRATIONS') }}"
+
+- name: "Enable monitor"
+  shell: |
+    cd ~/backend-app/dist
+    pm2 link 9aov2bz5u4vd37z fgvsnnx1w11hhkx
+    pm2 plus
 
 - name: "Print message"
   debug:
