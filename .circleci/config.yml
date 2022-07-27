@@ -332,6 +332,34 @@ jobs:
       - revert-migrations:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
+  deploy-prometheus:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["6c:53:26:5d:30:a1:13:1c:0d:f6:5d:ec:37:be:08:0e"]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update tar gzip ansible nodejs npm
+            apk --no-cache add curl jq
+            pip install awscli
+      - run:
+          name: Deploy backend
+          command: |
+            cd .circleci/ansible
+            ansible-playbook -i inventory.txt prometheus.yml
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+      - destroy-environments:
+          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+
   smoke-test:
     docker:
       - image: python:3.7-alpine3.11
@@ -459,8 +487,10 @@ workflows:
           requires: [run-migrations]
       - deploy-backend:
           requires: [run-migrations]
+      - deploy-prometheus:
+          requires: [deploy-backend]
       - smoke-test:
-          requires: [deploy-backend, deploy-frontend]
+          requires: [deploy-prometheus, deploy-frontend]
       - cloudfront-update:
           requires: [smoke-test]
       - cleanup:
