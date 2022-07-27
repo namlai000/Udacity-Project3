@@ -3,7 +3,7 @@
 
 - hosts: all
   roles:
-  - cloudalchemy.prometheus
+  - prometheus
   vars:
     prometheus_targets:
       node:
