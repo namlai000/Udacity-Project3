@@ -30,7 +30,6 @@ commands:
           when: on_fail
           command: |
             SUCCESS=$(curl --insecure https://kvdb.io/${KEYVAULT}/migration_<<parameters.workflow_id>>)
-            # Logic for reverting the database state
             if (( $SUCCESS == 1 ));
             then
                 cd ~/project/backend
@@ -176,10 +175,11 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            aws ec2 describe-instances \
+            IP=$(aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text >> .circleci/ansible/inventory.txt
+              --output text)
+            echo ${IP} >> .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
@@ -194,17 +194,17 @@ jobs:
     docker:
       - image: python:3.7-alpine3.11
         environment:
-          NODE_PORT: 3030
-          PORT: 3030
           NODE_ENV: production
           VERSION: 1
           TYPEORM_CONNECTION: postgres
-          TYPEORM_HOST: database-1.cgarwfdtnt93.us-east-1.rds.amazonaws.com
-          TYPEORM_USERNAME: postgres
-          TYPEORM_PASSWORD: password
+          TYPEORM_HOST: $TYPEORM_HOST
+          TYPEORM_USERNAME: $TYPEORM_USERNAME
+          TYPEORM_PASSWORD: $TYPEORM_PASSWORD
           TYPEORM_DATABASE: glee
           TYPEORM_PORT: 5432
           TYPEORM_ENTITIES: ./src/modules/domain/**/*.entity.ts
+          TYPEORM_MIGRATIONS_DIR: .src/migrations
+          TYPEORM_MIGRATIONS: .src/migrations/*.ts
     steps:
       - checkout
       - add_ssh_keys:
@@ -217,14 +217,14 @@ jobs:
             echo NODE_ENV=production >> backend/.env
             echo VERSION=1 >> backend/.env
             echo TYPEORM_CONNECTION=postgres >> backend/.env
-            echo TYPEORM_HOST=database-1.cgarwfdtnt93.us-east-1.rds.amazonaws.com >> backend/.env
-            echo TYPEORM_USERNAME=postgres >> backend/.env
-            echo TYPEORM_PASSWORD=password >> backend/.env
+            echo TYPEORM_HOST=${TYPEORM_HOST} >> backend/.env
+            echo TYPEORM_USERNAME=${TYPEORM_USERNAME} >> backend/.env
+            echo TYPEORM_PASSWORD=${TYPEORM_PASSWORD} >> backend/.env
             echo TYPEORM_DATABASE=glee >> backend/.env
             echo TYPEORM_PORT=5432 >> backend/.env
-            echo TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js} >> backend/.env
-            echo TYPEORM_MIGRATIONS_DIR=./migrations >> backend/.env
-            echo TYPEORM_MIGRATIONS=./migrations/*.ts >> backend/.env
+            echo TYPEORM_ENTITIES=.src/modules/domain/**/*.entity{.ts,.js} >> backend/.env
+            echo TYPEORM_MIGRATIONS_DIR=.src/migrations >> backend/.env
+            echo TYPEORM_MIGRATIONS=.src/migrations/*.ts >> backend/.env
             cat backend/.env
       - run:
           name: Install dependencies
@@ -248,13 +248,11 @@ jobs:
 
   run-migrations:
     docker:
-      - image: sleavely/node-awscli:14.x
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       - restore_cache:
           keys: [backend-build]
-      - add_ssh_keys:
-          fingerprints: ["6c:53:26:5d:30:a1:13:1c:0d:f6:5d:ec:37:be:08:0e"]
       - attach_workspace:
           at: ~/
       - run:
@@ -263,6 +261,7 @@ jobs:
             cd backend
             npm install
             npm run migrations > migrations_dump.txt
+            cat migrations_dump.txt
       - run:
           name: Send migration results to memstash
           command: |   
@@ -275,22 +274,32 @@ jobs:
           template: basic_fail_1
       - destroy-environments:
           workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"  
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   deploy-frontend:
     docker:
-      - image: sleavely/node-awscli:14.x
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       - attach_workspace:
           at: ~/
       - run:
+          name: Install dependencies
+          command: |
+            sudo apt update
+            sudo apt install -y tar gzip curl software-properties-common
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+      - run:
           name: Get backend url
           command: |
-            export BACKEND_IP=$(aws ec2 describe-instances \
+            BACKEND_IP=$(aws ec2 describe-instances \
             --query 'Reservations[*].Instances[*].PublicDnsName' \
             --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --output text)
-            export API_URL="http://${BACKEND_IP}:3030"
+            API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
             curl https://kvdb.io/${KEYVAULT}/apiurl -d ${API_URL}
@@ -308,6 +317,8 @@ jobs:
           template: basic_fail_1
       - destroy-environments:
           workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}" 
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   deploy-backend:
     docker:
@@ -323,7 +334,6 @@ jobs:
           command: |
             apk add --update tar gzip ansible nodejs npm
             apk --no-cache add curl
-            pip install awscli
       - run:
           name: Deploy backend
           command: |
@@ -340,6 +350,8 @@ jobs:
           template: basic_fail_1
       - destroy-environments:
           workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   smoke-test:
     docker:
@@ -350,22 +362,6 @@ jobs:
           name: Install dependencies
           command: |
             apk add --update curl
-            pip install awscli
-      # - run:
-      #     name: Backend smoke test.
-      #     command: |
-      #       BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
-      #         --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-      #         --query 'Reservations[*].Instances[*].PublicIpAddress' \
-      #         --output text)
-      #       export API_URL=http://${BACKEND_PUBLIC_IP}:3030
-      #       echo ${API_URL}
-      #       if curl -s $API_URL/api/status | grep "ok"
-      #       then
-      #         exit 0
-      #       else
-      #         exit 1
-      #       fi
       - run:
           name: Frontend smoke test.
           command: |
@@ -380,24 +376,16 @@ jobs:
       - slack/notify:
           event: fail
           template: basic_fail_1
-      # - destroy-environments:
-      #     workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
-      # - revert-migrations:
-      #     workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - destroy-environments:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   cloudfront-update:
     docker:
       - image: amazon/aws-cli
     steps:
       - checkout
-      - add_ssh_keys:
-          fingerprints: ["6c:53:26:5d:30:a1:13:1c:0d:f6:5d:ec:37:be:08:0e"]
-      - run:
-          name: Install dependencies
-          command: |
-            yum install -y tar gzip curl
-            curl -sL https://rpm.nodesource.com/setup_14.x | bash -
-            yum install -y nodejs
       - run:
           name: Update cloudfront distribution
           command: |
@@ -417,13 +405,9 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install dependencies
-          command: |
-            yum install -y curl jq
-      - run:
           name: Remove old stacks and files
           command: |
-            export OLD_WORKFLOW_ID=$(aws cloudformation \
+            OLD_WORKFLOW_ID=$(aws cloudformation \
                       list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
                       --no-paginate --output text)
             if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OLD_WORKFLOW_ID}" ]]
@@ -432,6 +416,9 @@ jobs:
               aws cloudformation delete-stack --stack-name "udapeople-frontend-${OLD_WORKFLOW_ID}"
               aws s3 rm "s3://udapeople-${OLD_WORKFLOW_ID}" --recursive
             fi
+      - slack/notify:
+          event: pass
+          template: success_tagged_deploy_1
       - slack/notify:
           event: fail
           template: basic_fail_1
