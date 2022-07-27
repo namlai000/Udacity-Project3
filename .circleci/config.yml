@@ -270,7 +270,7 @@ jobs:
           command: |   
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
-                curl https://kvdb.io/${KEYVAULT}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+                curl --insecure https://kvdb.io/${KEYVAULT}/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '1'
             fi
       - slack/notify:
           event: fail
@@ -292,7 +292,7 @@ jobs:
           command: |
             sudo apt update
             sudo apt install -y tar gzip curl jq software-properties-common
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            curl --insecure "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
       - run:
@@ -305,7 +305,7 @@ jobs:
             API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
-            curl https://kvdb.io/${KEYVAULT}/apiurl -d ${API_URL}
+            curl --insecure https://kvdb.io/${KEYVAULT}/apiurl -d ${API_URL}
             cat frontend/.env
       - run:
           name: Deploy frontend objects
@@ -337,6 +337,7 @@ jobs:
           command: |
             apk add --update tar gzip ansible nodejs npm
             apk --no-cache add curl jq
+            pip install awscli
       - run:
           name: Deploy backend
           command: |
@@ -370,7 +371,7 @@ jobs:
           command: |
             URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website.${AWS_DEFAULT_REGION}.amazonaws.com"             
             echo ${URL} 
-            if curl -s ${URL} | grep "Welcome"
+            if curl --insecure -s ${URL} | grep "Welcome"
             then
               exit 0
             else
