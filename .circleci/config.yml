@@ -184,8 +184,6 @@ jobs:
       - slack/notify:
           event: fail
           template: basic_fail_1
-      - destroy-environments:
-          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
 
   configure-infrastructure:
     docker:
