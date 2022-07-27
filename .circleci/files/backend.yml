@@ -33,11 +33,3 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub backend-${ID}
-
-  EIP:
-    Type: AWS::EC2::EIP
-    Properties:
-        InstanceId: !Ref EC2Instance
-        Tags:
-        - Key: Name
-          Value: !Sub elasticip-backend-${ID}
