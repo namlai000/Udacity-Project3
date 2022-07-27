@@ -154,6 +154,9 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["6c:53:26:5d:30:a1:13:1c:0d:f6:5d:ec:37:be:08:0e"]
       - run:
+          name: Install dependencies
+          command: yum install -y tar gzip curl jq
+      - run:
           name: Ensure back-end infrastructure exists
           command: |
             aws cloudformation deploy \
@@ -225,7 +228,7 @@ jobs:
           name: Install dependencies
           command: |
             apk add --update ansible
-            apk --no-cache add curl
+            apk --no-cache add curl jq
       - run:
           name: Configure server
           command: |
@@ -250,6 +253,11 @@ jobs:
           keys: [backend-build]
       - attach_workspace:
           at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            cd backend
+            npm install curl jq
       - run:
           name: Run migrations
           command: |
@@ -283,7 +291,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt update
-            sudo apt install -y tar gzip curl software-properties-common
+            sudo apt install -y tar gzip curl jq software-properties-common
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
@@ -328,7 +336,7 @@ jobs:
           name: Install dependencies
           command: |
             apk add --update tar gzip ansible nodejs npm
-            apk --no-cache add curl
+            apk --no-cache add curl jq
       - run:
           name: Deploy backend
           command: |
@@ -356,7 +364,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update curl
+            apk add --update curl jq
       - run:
           name: Frontend smoke test.
           command: |
@@ -382,6 +390,10 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install dependencies
+          command: |
+            yum install -y tar gzip curl jq
+      - run:
           name: Update cloudfront distribution
           command: |
             aws cloudformation deploy \
@@ -389,6 +401,9 @@ jobs:
             --stack-name InitialStack \
             --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
             --tags project=udapeople
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
       - destroy-environments:
           workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
       - revert-migrations:
@@ -399,6 +414,10 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            yum install -y curl jq
       - run:
           name: Remove old stacks and files
           command: |
