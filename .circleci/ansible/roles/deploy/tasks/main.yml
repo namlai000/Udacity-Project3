@@ -35,11 +35,11 @@
     TYPEORM_MIGRATIONS_DIR: "{{ lookup('env','TYPEORM_MIGRATIONS_DIR') }}"
     TYPEORM_MIGRATIONS: "{{ lookup('env','TYPEORM_MIGRATIONS') }}"
 
-- name: "Enable monitor"
-  shell: |
-    cd ~/backend-app/dist
-    pm2 link 9aov2bz5u4vd37z fgvsnnx1w11hhkx
-    pm2 plus
+# - name: "Enable monitor"
+#   shell: |
+#     cd ~/backend-app/dist
+#     pm2 link 9aov2bz5u4vd37z fgvsnnx1w11hhkx
+#     pm2 plus
 
 - name: "Print message"
   debug:
