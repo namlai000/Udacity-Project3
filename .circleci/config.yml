@@ -200,20 +200,6 @@ jobs:
       - attach_workspace:
           at: ~/
       - run:
-          name: Set env
-          command: |
-            echo NODE_ENV=production >> backend/.env
-            echo VERSION=1 >> backend/.env
-            echo TYPEORM_CONNECTION=postgres >> backend/.env
-            echo TYPEORM_HOST=${TYPEORM_HOST} >> backend/.env
-            echo TYPEORM_USERNAME=${TYPEORM_USERNAME} >> backend/.env
-            echo TYPEORM_PASSWORD=${TYPEORM_PASSWORD} >> backend/.env
-            echo TYPEORM_DATABASE=glee >> backend/.env
-            echo TYPEORM_PORT=5432 >> backend/.env
-            echo TYPEORM_ENTITIES=.src/modules/domain/**/*.entity{.ts,.js} >> backend/.env
-            echo TYPEORM_MIGRATIONS_DIR=.src/migrations >> backend/.env
-            echo TYPEORM_MIGRATIONS=.src/migrations/*.ts >> backend/.env
-      - run:
           name: Install dependencies
           command: |
             apk add --update ansible
@@ -239,20 +225,6 @@ jobs:
           keys: [backend-build]
       - attach_workspace:
           at: ~/
-      - run:
-          name: Set env
-          command: |
-            echo NODE_ENV=production >> backend/.env
-            echo VERSION=1 >> backend/.env
-            echo TYPEORM_CONNECTION=postgres >> backend/.env
-            echo TYPEORM_HOST=${TYPEORM_HOST} >> backend/.env
-            echo TYPEORM_USERNAME=${TYPEORM_USERNAME} >> backend/.env
-            echo TYPEORM_PASSWORD=${TYPEORM_PASSWORD} >> backend/.env
-            echo TYPEORM_DATABASE=glee >> backend/.env
-            echo TYPEORM_PORT=5432 >> backend/.env
-            echo TYPEORM_ENTITIES=.src/modules/domain/**/*.entity{.ts,.js} >> backend/.env
-            echo TYPEORM_MIGRATIONS_DIR=.src/migrations >> backend/.env
-            echo TYPEORM_MIGRATIONS=.src/migrations/*.ts >> backend/.env
       - run:
           name: Install dependencies
           command: |
@@ -335,20 +307,6 @@ jobs:
           fingerprints: ["6c:53:26:5d:30:a1:13:1c:0d:f6:5d:ec:37:be:08:0e"]
       - attach_workspace:
           at: ~/
-      - run:
-          name: Set env
-          command: |
-            echo NODE_ENV=production >> backend/.env
-            echo VERSION=1 >> backend/.env
-            echo TYPEORM_CONNECTION=postgres >> backend/.env
-            echo TYPEORM_HOST=${TYPEORM_HOST} >> backend/.env
-            echo TYPEORM_USERNAME=${TYPEORM_USERNAME} >> backend/.env
-            echo TYPEORM_PASSWORD=${TYPEORM_PASSWORD} >> backend/.env
-            echo TYPEORM_DATABASE=glee >> backend/.env
-            echo TYPEORM_PORT=5432 >> backend/.env
-            echo TYPEORM_ENTITIES=.src/modules/domain/**/*.entity{.ts,.js} >> backend/.env
-            echo TYPEORM_MIGRATIONS_DIR=.src/migrations >> backend/.env
-            echo TYPEORM_MIGRATIONS=.src/migrations/*.ts >> backend/.env
       - run:
           name: Install dependencies
           command: |
