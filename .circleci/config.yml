@@ -154,9 +154,6 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["6c:53:26:5d:30:a1:13:1c:0d:f6:5d:ec:37:be:08:0e"]
       - run:
-          name: Install dependencies
-          command: yum install -y tar gzip
-      - run:
           name: Ensure back-end infrastructure exists
           command: |
             aws cloudformation deploy \
