@@ -187,6 +187,8 @@ jobs:
       - slack/notify:
           event: fail
           template: basic_fail_1
+      - destroy-environments:
+          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
 
   configure-infrastructure:
     docker:
@@ -216,6 +218,7 @@ jobs:
           command: |
             apk add --update ansible
             apk --no-cache add curl jq
+            pip install awscli
       - run:
           name: Configure server
           command: |
@@ -254,7 +257,10 @@ jobs:
           name: Install dependencies
           command: |
             cd backend
-            npm install curl jq
+            npm install curl jq tar gzip
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "aws.zip"
+            unzip aws.zip
+            sudo ./aws/install
       - run:
           name: Run migrations
           command: |
@@ -289,8 +295,8 @@ jobs:
           command: |
             sudo apt update
             sudo apt install -y tar gzip curl jq software-properties-common
-            curl --insecure "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "aws.zip"
+            unzip aws.zip
             sudo ./aws/install
       - run:
           name: Get backend url
@@ -376,7 +382,8 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update curl jq
+            apk add --update curl jq tar gzip
+            pip install awscli
       - run:
           name: Frontend smoke test.
           command: |
@@ -448,6 +455,10 @@ jobs:
       - slack/notify:
           event: fail
           template: basic_fail_1
+      - destroy-environments:
+          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
+      - revert-migrations:
+          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
 
 workflows:
   default:
