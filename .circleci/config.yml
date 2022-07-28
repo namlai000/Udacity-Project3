@@ -124,7 +124,10 @@ jobs:
           command: |
             cd frontend
             npm install
-            npm audit --audit-level=critical
+            npm audit --audit-level=critical fix --force
+      - save_cache:
+          paths: [frontend/node_modules]
+          key: frontend-build
       - slack/notify:
           event: fail
           template: basic_fail_1
@@ -141,7 +144,10 @@ jobs:
           command: |
             cd backend
             npm install
-            npm audit --audit-level=critical
+            npm audit --audit-level=critical fix --force
+      - save_cache:
+          paths: [backend/node_modules]
+          key: backend-build
       - slack/notify:
           event: fail
           template: basic_fail_1
