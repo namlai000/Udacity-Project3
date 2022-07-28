@@ -1,2 +1,5 @@
 Github: https://github.com/namlai000/Udacity-Project3
-S3 Url: http://udapeople-430002e.s3-website-us-east-1.amazonaws.com/
+S3 Url: http://udapeople-f944c4a.s3-website-us-east-1.amazonaws.com/
+cloudfront: dno4kf3owacjj.cloudfront.net
+backendip: 54.236.231.206
+dns: ec2-54-236-231-206.compute-1.amazonaws.com
