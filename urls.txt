@@ -1,0 +1,2 @@
+Github: https://github.com/namlai000/Udacity-Project3
+S3 Url: http://udapeople-430002e.s3-website-us-east-1.amazonaws.com/
